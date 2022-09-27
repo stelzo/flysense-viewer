@@ -18,7 +18,7 @@ namespace flysense
             void AddLog(const std::string &log);
             void ClearLogs();
             void SelectCamera(int camId);
-            void AddOverlayAndRender(cv::cuda::GpuMat &image, int camId);
+            void AddOverlayAndRender(const cv::cuda::GpuMat &image, int camId);
 
             void SetKernelAvailable(bool available);
 
@@ -28,6 +28,8 @@ namespace flysense
 
         private:
             void startWebServer();
+
+            cv::Mat generateOverlay();
 
             std::list<cv::Mat> in_buff;
             std::list<cv::Mat> out_buff;
@@ -46,6 +48,19 @@ namespace flysense
             std::string m_batteryPowerFormatted;
             std::string m_batteryVoltageFormatted;
             std::string m_batteryCurrentFormatted;
+
+            int text_max_messages = 15;
+
+            int font = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
+            double font_size = 1.5;
+            cv::Scalar font_color = cv::Scalar(227, 3, 227);
+            cv::Point2i text_current_origin_init = cv::Point2i(0, out_h / 2 + (text_line_height * font_size));
+            cv::Point2i text_current_origin;
+
+            std::string voltage = "-";
+            std::string power = "-";
+            std::string current = "-";
+            bool system_state_kernel_available = false;
         };
     }
 }
