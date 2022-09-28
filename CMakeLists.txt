@@ -16,7 +16,7 @@ file(GLOB SOURCES
 )
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include /home/nvidia/flysense-camera-interaction/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME} SHARED
     ${PROJECT_SOURCE_DIR}/viewer.cc
@@ -28,8 +28,15 @@ add_custom_target(uninstall
     xargs rm < install_manifest.txt
 )
 
-add_executable(${PROJECT_NAME}
-    SOURCES
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/viewer.h
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} /home/nvidia/flysense-camera-interaction/build/libflysense-jetson-cam.so)
+install(TARGETS ${PROJECT_NAME} 
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/flysense-viewer
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} flysense-jetson-cam)
