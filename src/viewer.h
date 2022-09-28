@@ -29,7 +29,7 @@ namespace flysense
         private:
             void startWebServer();
 
-            cv::Mat generateOverlay();
+            void generateOverlay(cv::cuda::GpuMat &img);
 
             std::list<cv::Mat> in_buff;
             std::list<cv::Mat> out_buff;
@@ -52,15 +52,14 @@ namespace flysense
             int text_max_messages = 15;
 
             int font = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
-            double font_size = 1.5;
-            cv::Scalar font_color = cv::Scalar(227, 3, 227);
-            cv::Point2i text_current_origin_init = cv::Point2i(0, out_h / 2 + (text_line_height * font_size));
-            cv::Point2i text_current_origin;
+            double fontSize = 1.5;
+            cv::Scalar fontColor = cv::Scalar(227, 3, 227);
+            cv::Point2i textCurrentOriginInit = cv::Point2i(0, out_h / 2 + (text_line_height * fontSize));
+            cv::Point2i textCurrentOrigin;
 
             std::string voltage = "-";
             std::string power = "-";
             std::string current = "-";
-            bool system_state_kernel_available = false;
         };
     }
 }

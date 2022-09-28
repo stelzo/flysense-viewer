@@ -41,10 +41,16 @@ namespace flysense
             }
 
             // resize to screen size
+            /* TODO use cudaError_t cudaResize( uchar3* input,  size_t inputWidth,  size_t inputHeight,
+                    uchar3* output, size_t outputWidth, size_t outputHeight,
+                    cudaFilterMode filter=FILTER_POINT );
+            */
             cv::cuda::GpuMat resized(cv::Size(m_screenWidth, m_screenHeight), CV_8UC3);
             cv::cuda::resize(image, resized, cv::Size(m_screenWidth, m_screenHeight));
 
             // TODO add overlay
+            cv::Mat overlay = generateOverlay();
+            // cudaOverlay(resized, camId);
         }
 
         void Viewer::AddLog(const std::string &log)
@@ -84,6 +90,41 @@ namespace flysense
 
         void Viewer::startWebServer()
         {
+        }
+
+        void Viewer::generateOverlay(cv::cuda::GpuMat &img)
+        {
+            // TODO overlay with cudaOverlay
+            cv::Mat frameOut;
+            img.download(frameOut);
+            // cv::Mat frameOut = cv::Mat::zeros(cv::Size(m_screenWidth, m_screenHeight), cv::CV_U8C3);
+            textCurrentOrigin = textCurrentOriginInit;
+            for (const auto &str : m_logs)
+            {
+                if (textCurrentOrigin.y - text_line_height < 0)
+                {
+                    break;
+                }
+                cv::putText(frameOut, str, textCurrentOrigin, font, fontSize, fontColor, 1, cv::LINE_8, false);
+                textCurrentOrigin.y -= text_line_height * fontSize;
+            }
+
+            // state of a system
+            cv::Scalar kernelRectStateColor = m_kernelAvailable ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
+            cv::Scalar kernelFontStateColor = m_kernelAvailable ? cv::Scalar(0, 0, 0) : cv::Scalar(255, 255, 255);
+
+            cv::Rect kernelStateRect(0, 0, 100, 50);
+            cv::rectangle(frameOut, kernelStateRect, kernelRectStateColor, -1);
+            cv::putText(frameOut, "TRENZ", cv::Point2i(10, (text_line_height * fontSize * 0.8)), font, fontSize * 0.4, kernelFontStateColor, 1, cv::LINE_8, false);
+
+            cv::Rect powerRect(frameOut.size().width - 130, 0, 130, 150);
+            cv::rectangle(frameOut, powerRect, cv::Scalar(0, 0, 0), -1);
+            cv::putText(frameOut, power, cv::Point2i(frameOut.size().width - 130 + 20, (text_line_height * fontSize * 0.8)), font, fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
+            cv::putText(frameOut, voltage, cv::Point2i(frameOut.size().width - 130 + 20, (50 + text_line_height * fontSize * 0.8)), font, fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
+            cv::putText(frameOut, current, cv::Point2i(frameOut.size().width - 130 + 20, (100 + text_line_height * fontSize * 0.8)), font, fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
+
+            img.upload(frameOut);
+            // return frameOut;
         }
     }
 }
