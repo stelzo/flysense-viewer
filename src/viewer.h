@@ -32,14 +32,24 @@ namespace flysense
             void SetStartUserScanAction(bool action);
 
             bool IsStartUserScanAction();
+            bool StartWebServer();
 
         private:
-            void startWebServer();
-
             void generateOverlay(cv::cuda::GpuMat &img);
 
             std::list<cv::Mat> in_buff;
             std::list<cv::Mat> out_buff;
+
+            void *webserver = 0;
+
+            void *start_resource = 0;
+            void *stop_resource = 0;
+            void *log_resource = 0;
+            void *camera_select_resource = 0;
+            void *kernelstate_resource = 0;
+            void *voltage_state_resource = 0;
+            void *current_state_resource = 0;
+            void *power_state_resource = 0;
 
             int m_screenFps;
             int m_screenWidth;
@@ -63,8 +73,8 @@ namespace flysense
             int m_font = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
             double m_fontSize = 1.5;
             // cv::Scalar m_fontColor = cv::Scalar(227, 3, 227, 255);
-            cv::Scalar m_fontColor = cv::Scalar(227, 3, 227);
-            cv::Point2i m_m_textCurrentOriginInit = cv::Point2i(0, m_screenHeight / 2 + (m_textLineHeight * m_fontSize));
+            cv::Scalar m_fontColor = cv::Scalar(0, 0, 255);
+            cv::Point2i m_textCurrentOriginInit;
             cv::Point2i m_textCurrentOrigin;
         };
     }

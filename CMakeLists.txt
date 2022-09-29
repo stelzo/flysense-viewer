@@ -20,6 +20,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME} SHARED
     ${PROJECT_SOURCE_DIR}/viewer.cc
+    #${PROJECT_SOURCE_DIR}/cameraManage.h
 )
 
 include(GNUInstallDirs)
@@ -39,4 +40,4 @@ install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} flysense-jetson-cam)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} flysense-jetson-cam httpserver)
