@@ -1,175 +1,71 @@
+#pragma once
 
-#include "viewer.h"
+#include <opencv2/opencv.hpp>
+#include <flysense-jetson-cam/cam.h>
 
-//#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudawarping.hpp>
+constexpr int m_textStartWidth = 0;
+constexpr int m_textStartHeight = 0;
+constexpr int m_textMaxLength = 200;
+constexpr int m_textThickness = 3;
+constexpr int m_textLineHeight = 28;
 
 namespace flysense
 {
     namespace jetson
     {
-
-        Viewer::Viewer(cv::Size screenSize, int screenFps, int webserverPort) : m_screenWidth(screenSize.width), m_screenHeight(screenSize.height), m_screenFps(screenFps), m_webserverPort(webserverPort)
+        class Viewer
         {
-            m_screen = std::make_unique<camera::Screen>(screenSize, m_screenFps);
-            m_m_textCurrentOriginInit = cv::Point2i(0, m_screenHeight / 2 + (m_textLineHeight * m_fontSize));
-            startWebServer();
-        }
+        public:
+            Viewer(cv::Size screenSize, int screenFps, int webserverPort);
+            ~Viewer();
 
-        Viewer::~Viewer()
-        {
-        }
+            void AddLog(const std::string &log);
+            void ClearLogs();
+            void SelectCamera(int camId);
+            void AddOverlayAndRender(cv::cuda::GpuMat &image, int camId);
 
-        /**
-         * @brief
-         *
-         * @param image
-         * @param camId
-         */
-        void Viewer::AddOverlayAndRender(cv::cuda::GpuMat &image, int camId)
-        {
-            if (camId == -1) // override with black image
-            {
-                cv::Mat blackImage = cv::Mat::zeros(m_screenHeight, m_screenWidth, CV_8UC3);
-                blackImage.copyTo(image);
-            }
-            else
-            {
-                if (camId != m_selectedCamId)
-                {
-                    return;
-                }
-            }
+            void SetKernelAvailable(bool available);
 
-            // resize to screen size
-            /* TODO use cudaError_t cudaResize( uchar3* input,  size_t inputWidth,  size_t inputHeight,
-                    uchar3* output, size_t outputWidth, size_t outputHeight,
-                    cudaFilterMode filter=FILTER_POINT );
-            */
-            // cv::cuda::GpuMat resized(cv::Size(m_screenWidth, m_screenHeight), CV_8UC3);
-            // cv::cuda::resize(image, resized, cv::Size(m_screenWidth, m_screenHeight));
+            void SetBatteryPowerFormatted(const std::string &powerFormatted);
+            void SetBatteryVoltageFormatted(const std::string &voltFormatted);
+            void SetBatteryCurrentFormatted(const std::string &currFormatted);
+            void SetStartUserScanAction(bool action);
 
-            // TODO add overlay with cuda to save cpu time
-            generateOverlay(image);
-            // cudaOverlay(resized, camId);
+            bool IsStartUserScanAction();
 
-            m_screen->render(image);
-            // resized.copyTo(image);
-        }
+        private:
+            void startWebServer();
 
-        void Viewer::AddLog(const std::string &log)
-        {
-            m_logs.push_back(log);
-        }
+            void generateOverlay(cv::cuda::GpuMat &img);
 
-        void Viewer::ClearLogs()
-        {
-            m_logs.clear();
-        }
+            std::list<cv::Mat> in_buff;
+            std::list<cv::Mat> out_buff;
 
-        void Viewer::SelectCamera(int camId)
-        {
-            m_selectedCamId = camId;
-        }
+            int m_screenFps;
+            int m_screenWidth;
+            int m_screenHeight;
+            int m_webserverPort;
 
-        void Viewer::SetKernelAvailable(bool available)
-        {
-            m_kernelAvailable = available;
-        }
+            bool m_startUserScanAction = false;
 
-        void Viewer::SetBatteryPowerFormatted(const std::string &powerFormatted)
-        {
-            m_batteryPowerFormatted = powerFormatted;
-        }
+            std::unique_ptr<camera::Screen> m_screen;
 
-        void Viewer::SetBatteryVoltageFormatted(const std::string &voltFormatted)
-        {
-            m_batteryVoltageFormatted = voltFormatted;
-        }
+            std::list<std::string> m_logs;
 
-        void Viewer::SetBatteryCurrentFormatted(const std::string &currFormatted)
-        {
-            m_batteryCurrentFormatted = currFormatted;
-        }
+            int m_selectedCamId = 0;
+            bool m_kernelAvailable = false;
+            std::string m_batteryPowerFormatted = "-";
+            std::string m_batteryVoltageFormatted = "-";
+            std::string m_batteryCurrentFormatted = "-";
 
-        void Viewer::startWebServer()
-        {
-            // TODO Henning
-        }
+            int m_textMaxMessages = 15;
 
-        bool Viewer::IsStartUserScanAction()
-        {
-            return m_startUserScanAction;
-        }
-
-        void Viewer::SetStartUserScanAction(bool action)
-        {
-            m_startUserScanAction = action;
-        }
-
-        void Viewer::generateOverlay(cv::cuda::GpuMat &img)
-        {
-            cv::Mat overlay;
-            img.download(overlay);
-            // cv::Mat frameOut = cv::Mat::zeros(cv::Size(m_screenWidth, m_screenHeight), cv::CV_U8C3);
-            m_textCurrentOrigin = m_m_textCurrentOriginInit;
-            for (const auto &str : m_logs)
-            {
-                if (m_textCurrentOrigin.y - m_textLineHeight < 0)
-                {
-                    break;
-                }
-                cv::putText(overlay, str, m_textCurrentOrigin, m_font, m_fontSize, m_fontColor, 1, cv::LINE_8, false);
-                m_textCurrentOrigin.y -= m_textLineHeight * m_fontSize;
-            }
-
-            // state of a system
-            cv::Scalar kernelRectStateColor = m_kernelAvailable ? cv::Scalar(0, 255, 0) : cv::Scalar(255, 0, 0);
-            cv::Scalar kernelFontStateColor = m_kernelAvailable ? cv::Scalar(0, 0, 0) : cv::Scalar(255, 255, 255);
-
-            cv::Rect kernelStateRect(0, 0, 100, 50);
-            cv::rectangle(overlay, kernelStateRect, kernelRectStateColor, -1);
-            cv::putText(overlay, "TRENZ", cv::Point2i(10, (m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, kernelFontStateColor, 1, cv::LINE_8, false);
-
-            cv::Rect powerRect(overlay.size().width - 130, 0, 130, 150);
-            cv::rectangle(overlay, powerRect, cv::Scalar(0, 0, 0), -1);
-            cv::putText(overlay, m_batteryPowerFormatted, cv::Point2i(overlay.size().width - 130 + 20, (m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
-            cv::putText(overlay, m_batteryVoltageFormatted, cv::Point2i(overlay.size().width - 130 + 20, (50 + m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
-            cv::putText(overlay, m_batteryCurrentFormatted, cv::Point2i(overlay.size().width - 130 + 20, (100 + m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255), 1, cv::LINE_8, false);
-
-            img.upload(overlay);
-            /*
-            cv::Mat overlay(img.size(), CV_8UC4, cv::Scalar(0, 0, 0, 0)); // alpha 0
-            // cv::Mat frameOut = cv::Mat::zeros(cv::Size(m_screenWidth, m_screenHeight), cv::CV_U8C3);
-            m_textCurrentOrigin = m_m_textCurrentOriginInit;
-            for (const auto &str : m_logs)
-            {
-                if (m_textCurrentOrigin.y - m_textLineHeight < 0)
-                {
-                    break;
-                }
-                cv::putText(overlay, str, m_textCurrentOrigin, m_font, m_fontSize, m_fontColor, 1, cv::LINE_8, false);
-                m_textCurrentOrigin.y -= m_textLineHeight * m_fontSize;
-            }
-
-            // state of a system
-            cv::Scalar kernelRectStateColor = m_kernelAvailable ? cv::Scalar(0, 255, 0, 255) : cv::Scalar(0, 0, 255, 255);
-            cv::Scalar kernelFontStateColor = m_kernelAvailable ? cv::Scalar(0, 0, 0, 255) : cv::Scalar(255, 255, 255, 255);
-
-            cv::Rect kernelStateRect(0, 0, 100, 50);
-            cv::rectangle(overlay, kernelStateRect, kernelRectStateColor, -1);
-            cv::putText(overlay, "TRENZ", cv::Point2i(10, (m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, kernelFontStateColor, 1, cv::LINE_8, false);
-
-            cv::Rect powerRect(overlay.size().width - 130, 0, 130, 150);
-            cv::rectangle(overlay, powerRect, cv::Scalar(0, 0, 0, 255), -1);
-            cv::putText(overlay, m_batteryPowerFormatted, cv::Point2i(overlay.size().width - 130 + 20, (m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255, 255), 1, cv::LINE_8, false);
-            cv::putText(overlay, m_batteryVoltageFormatted, cv::Point2i(overlay.size().width - 130 + 20, (50 + m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255, 255), 1, cv::LINE_8, false);
-            cv::putText(overlay, m_batteryCurrentFormatted, cv::Point2i(overlay.size().width - 130 + 20, (100 + m_textLineHeight * m_fontSize * 0.8)), m_font, m_fontSize * 0.4, cv::Scalar(255, 255, 255, 255), 1, cv::LINE_8, false);
-           // cuda
-            cv::cuda::GpuMat frameOut;
-            frameOut.upload(overlay);
-            flysense::jetson::camera::overlay(img, frameOut);
-            */
-        }
+            int m_font = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
+            double m_fontSize = 1.5;
+            // cv::Scalar m_fontColor = cv::Scalar(227, 3, 227, 255);
+            cv::Scalar m_fontColor = cv::Scalar(227, 3, 227);
+            cv::Point2i m_m_textCurrentOriginInit = cv::Point2i(0, m_screenHeight / 2 + (m_textLineHeight * m_fontSize));
+            cv::Point2i m_textCurrentOrigin;
+        };
     }
 }
