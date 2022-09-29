@@ -362,9 +362,9 @@ namespace flysense
             cv::Scalar kernelRectStateColor = m_kernelAvailable ? cv::Scalar(0, 255, 0) : cv::Scalar(255, 0, 0);
             cv::Scalar kernelFontStateColor = m_kernelAvailable ? cv::Scalar(0, 0, 0) : cv::Scalar(255, 255, 255);
 
-            cv::Rect kernelStateRect(0, m_screenHeight / 4, 100, 50);
+            cv::Rect kernelStateRect(0, m_screenHeight / 6, 100, 50);
             cv::rectangle(overlay, kernelStateRect, kernelRectStateColor, -1);
-            cv::putText(overlay, "TRENZ", cv::Point2i(10, (m_textLineHeight * m_fontSize * 0.8) - m_screenHeight / 4), m_font, m_fontSize * 0.4, kernelFontStateColor, 1, cv::LINE_8, false);
+            cv::putText(overlay, "TRENZ", cv::Point2i(10, (m_textLineHeight * m_fontSize * 0.8) + (m_screenHeight / 6)), m_font, m_fontSize * 0.4, kernelFontStateColor, 1, cv::LINE_8, false);
 
             cv::Rect powerRect(overlay.size().width - 130, 0, 130, 150);
             cv::rectangle(overlay, powerRect, cv::Scalar(0, 0, 0), -1);

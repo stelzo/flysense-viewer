@@ -73,7 +73,7 @@ namespace flysense
             int m_font = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
             double m_fontSize = 1.5;
             // cv::Scalar m_fontColor = cv::Scalar(227, 3, 227, 255);
-            cv::Scalar m_fontColor = cv::Scalar(0, 0, 255);
+            cv::Scalar m_fontColor = cv::Scalar(255, 0, 0);
             cv::Point2i m_textCurrentOriginInit;
             cv::Point2i m_textCurrentOrigin;
         };
