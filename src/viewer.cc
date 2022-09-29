@@ -9,9 +9,9 @@ namespace flysense
     namespace jetson
     {
 
-        Viewer::Viewer(int screenWidth, int screenHeight, int screenFps, int webserverPort) : m_screenWidth(screenWidth), m_screenHeight(screenHeight), m_screenFps(screenFps), m_webserverPort(webserverPort)
+        Viewer::Viewer(cv::Size screenSize, int screenFps, int webserverPort) : m_screenWidth(screenSize.width), m_screenHeight(screenSize.height), m_screenFps(screenFps), m_webserverPort(webserverPort)
         {
-            m_screen = std::make_unique<camera::Screen>(m_screenWidth, m_screenHeight, m_screenFps);
+            m_screen = std::make_unique<camera::Screen>(screenSize, m_screenFps);
             m_m_textCurrentOriginInit = cv::Point2i(0, m_screenHeight / 2 + (m_textLineHeight * m_fontSize));
             startWebServer();
         }
