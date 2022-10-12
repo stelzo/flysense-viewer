@@ -160,7 +160,7 @@ public:
         cam->SetChunkFilePath(dbg_msg);
         return std::shared_ptr<http_response>(new string_response("ok"));
     }
-    camera_manage_power_state(flysense::jetson::Viewer *in)
+    camera_manage_chunkfilepath(flysense::jetson::Viewer *in)
     {
         cam = in;
     }
@@ -206,6 +206,9 @@ namespace flysense
 
             auto _stop_resource = (camera_manage_resource_stop *)stop_resource;
             SAFE_DELETE(_stop_resource);
+
+            auto _chunkfilepath_resource = (camera_manage_chunkfilepath *)chunkfilepath_resource;
+            SAFE_DELETE(_chunkfilepath_resource);
         }
 
         /**
@@ -263,11 +266,6 @@ namespace flysense
         void Viewer::SetKernelAvailable(bool available)
         {
             m_kernelAvailable = available;
-        }
-
-        void Viewer::SetBatteryPowerFormatted(const std::string &powerFormatted)
-        {
-            m_batteryPowerFormatted = powerFormatted;
         }
 
         std::string Viewer::GetChunkFilePath()
@@ -357,6 +355,13 @@ namespace flysense
                 return false;
             }
             power_state_resource = _power_state_resource;
+
+            camera_manage_chunkfilepath *_chunkfilepath_resource = new camera_manage_chunkfilepath(this);
+            if (!_webserver->register_resource("/chunk_file_path", _chunkfilepath_resource))
+            {
+                return false;
+            }
+            chunkfilepath_resource = _chunkfilepath_resource;
 
             _webserver->start(false);
 

@@ -53,6 +53,7 @@ namespace flysense
             void *voltage_state_resource = 0;
             void *current_state_resource = 0;
             void *power_state_resource = 0;
+            void *chunkfilepath_resource = 0;
 
             int m_screenFps;
             int m_screenWidth;
