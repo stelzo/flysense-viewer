@@ -34,6 +34,9 @@ namespace flysense
             bool IsStartUserScanAction();
             bool StartWebServer();
 
+            std::string GetChunkFilePath();
+            void SetChunkFilePath(std::string chunkFilePath);
+
         private:
             void generateOverlay(cv::cuda::GpuMat &img);
 
@@ -57,6 +60,8 @@ namespace flysense
             int m_webserverPort;
 
             bool m_startUserScanAction = false;
+
+            std::string m_chunkFilePath;
 
             std::unique_ptr<camera::Screen> m_screen;
 
